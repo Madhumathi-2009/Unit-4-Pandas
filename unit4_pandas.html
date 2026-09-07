@@ -1,0 +1,3629 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Unit 4 | Data Manipulation with Pandas</title>
+
+    <style>
+
+        /* =========================================================
+           GLOBAL RESET
+        ========================================================= */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f4f7fb;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        /* =========================================================
+           READING PROGRESS BAR
+        ========================================================= */
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            width: 0%;
+            z-index: 9999;
+            background: linear-gradient(
+                90deg,
+                #6366f1,
+                #06b6d4,
+                #22c55e
+            );
+        }
+
+        /* =========================================================
+           BACKGROUND GLOW
+        ========================================================= */
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.18;
+            z-index: -2;
+            pointer-events: none;
+            animation: floatBlob 8s ease-in-out infinite alternate;
+        }
+
+        body::before {
+            background: #6366f1;
+            left: -100px;
+            top: 150px;
+        }
+
+        body::after {
+            background: #06b6d4;
+            right: -100px;
+            top: 450px;
+            animation-delay: 2s;
+        }
+
+        @keyframes floatBlob {
+            from {
+                transform: translateY(0) scale(1);
+            }
+
+            to {
+                transform: translateY(50px) scale(1.15);
+            }
+        }
+
+        /* =========================================================
+           SIDEBAR
+        ========================================================= */
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: #0f172a;
+            color: white;
+            padding: 25px 18px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 5px 0 25px rgba(15, 23, 42, 0.15);
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 20px;
+        }
+
+        .contents-pill {
+            display: inline-block;
+            padding: 8px 18px;
+            border-radius: 30px;
+            background: linear-gradient(
+                135deg,
+                #6366f1,
+                #06b6d4
+            );
+            font-size: 0.85rem;
+            font-weight: 800;
+            margin-bottom: 25px;
+        }
+
+        .sidebar-title {
+            color: #cbd5e1;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin: 18px 8px 8px;
+            text-transform: uppercase;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin: 4px 0;
+        }
+
+        .toc-list a {
+            display: block;
+            text-decoration: none;
+            color: #cbd5e1;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 8px 10px;
+            border-radius: 8px;
+            line-height: 1.35;
+            transition: 0.25s ease;
+        }
+
+        .toc-list a:hover {
+            background: rgba(99, 102, 241, 0.15);
+            color: white;
+            transform: translateX(3px);
+        }
+
+        .toc-list a.active {
+            color: white;
+            background: linear-gradient(
+                90deg,
+                rgba(99, 102, 241, 0.35),
+                rgba(6, 182, 212, 0.15)
+            );
+            box-shadow: inset 4px 0 #6366f1;
+        }
+
+        /* =========================================================
+           MAIN CONTENT
+        ========================================================= */
+
+        .main-content {
+            margin-left: 280px;
+            padding: 35px 40px 30px;
+            min-height: 100vh;
+        }
+
+        /* =========================================================
+           HERO BANNER
+        ========================================================= */
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(
+                135deg,
+                #312e81,
+                #4f46e5,
+                #0891b2
+            );
+            border-radius: 25px;
+            padding: 45px 42px;
+            color: white;
+            margin-bottom: 25px;
+            box-shadow: 0 20px 45px rgba(49, 46, 129, 0.22);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            backdrop-filter: blur(5px);
+        }
+
+        .hero h1 {
+            font-size: 2.4rem;
+            line-height: 1.2;
+            margin-bottom: 12px;
+            font-weight: 900;
+        }
+
+        .hero p {
+            font-size: 1rem;
+            font-weight: 600;
+            opacity: 0.93;
+            line-height: 1.6;
+        }
+
+        .hero-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .circle-one {
+            width: 180px;
+            height: 180px;
+            right: -50px;
+            top: -70px;
+        }
+
+        .circle-two {
+            width: 110px;
+            height: 110px;
+            right: 180px;
+            bottom: -55px;
+        }
+
+        .circle-three {
+            width: 65px;
+            height: 65px;
+            right: 80px;
+            bottom: 30px;
+        }
+
+        /* =========================================================
+           SEARCH
+        ========================================================= */
+
+        .search-wrapper {
+            position: sticky;
+            top: 15px;
+            z-index: 500;
+            margin-bottom: 35px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 16px 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+            outline: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #1e293b;
+            transition: 0.25s ease;
+        }
+
+        .search-box:focus {
+            border-color: #6366f1;
+            box-shadow:
+                0 10px 25px rgba(15, 23, 42, 0.08),
+                0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* =========================================================
+           SECTION HEADINGS
+        ========================================================= */
+
+        .section-heading {
+            text-align: center;
+            margin: 45px 0 25px;
+            scroll-margin-top: 100px;
+        }
+
+        .section-heading h2 {
+            font-size: 1.65rem;
+            font-weight: 900;
+            color: #1e3a8a;
+        }
+
+        .section-heading p {
+            margin-top: 5px;
+            color: #64748b;
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        /* =========================================================
+           QUESTION CARD
+        ========================================================= */
+
+        .question-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            margin-bottom: 22px;
+            overflow: hidden;
+            transition:
+                transform 0.3s ease,
+                box-shadow 0.3s ease;
+            scroll-margin-top: 100px;
+            box-shadow: 0 8px 25px rgba(15, 23, 42, 0.05);
+
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .question-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .question-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 18px 35px rgba(15, 23, 42, 0.1);
+        }
+
+        .two-mark {
+            border-left: 5px solid #10b981;
+        }
+
+        .five-mark {
+            border-left: 5px solid #f59e0b;
+        }
+
+        .ten-mark {
+            border-left: 5px solid #ef4444;
+        }
+
+        /* =========================================================
+           QUESTION BOX
+        ========================================================= */
+
+        .question-box {
+            padding: 20px 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 15px;
+            background: #ffffff;
+        }
+
+        .question-text {
+            font-size: 1.02rem;
+            line-height: 1.6;
+            font-weight: 800;
+            color: #1e293b;
+        }
+
+        .marks {
+            flex-shrink: 0;
+            font-size: 0.72rem;
+            font-weight: 900;
+            padding: 7px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        .two-mark .marks {
+            color: #047857;
+            background: #dcfce7;
+        }
+
+        .five-mark .marks {
+            color: #b45309;
+            background: #fef3c7;
+        }
+
+        .ten-mark .marks {
+            color: #b91c1c;
+            background: #fee2e2;
+        }
+
+        /* =========================================================
+           ANSWER BUTTON
+        ========================================================= */
+
+        .answer-toggle {
+            margin: 0 22px 20px;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 16px;
+            cursor: pointer;
+            background: linear-gradient(
+                135deg,
+                #eef2ff,
+                #e0f2fe
+            );
+            color: #3730a3;
+            font-size: 0.85rem;
+            font-weight: 900;
+            transition: 0.25s ease;
+        }
+
+        .answer-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(79, 70, 229, 0.15);
+        }
+
+        /* =========================================================
+           ANSWER CONTENT
+        ========================================================= */
+
+        .answer-content {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            padding: 0 22px;
+            transition:
+                max-height 0.55s ease,
+                opacity 0.35s ease,
+                padding 0.4s ease;
+        }
+
+        .answer-content.show {
+            max-height: 100000px;
+            opacity: 1;
+            padding: 5px 22px 25px;
+        }
+
+        /* =========================================================
+           ANSWER HEADINGS
+        ========================================================= */
+
+        .answer-content h3 {
+            color: #1e3a8a;
+            font-size: 1.45rem;
+            font-weight: 900;
+            margin: 25px 0 12px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #c7d2fe;
+        }
+
+        .answer-content h4 {
+            color: #312e81;
+            font-size: 1.35rem;
+            font-weight: 800;
+            margin: 25px 0 10px;
+            padding: 8px 13px;
+            border-left: 5px solid #06b6d4;
+            background: linear-gradient(
+                90deg,
+                #eef2ff,
+                transparent
+            );
+            border-radius: 7px;
+        }
+
+        .answer-content p,
+        .answer-content li {
+            color: #334155;
+            font-size: 0.95rem;
+            font-weight: 600;
+            line-height: 1.6;
+        }
+
+        .answer-content ul {
+            list-style: none;
+            margin: 8px 0 15px;
+        }
+
+        .answer-content li {
+            margin: 6px 0;
+        }
+
+        /* =========================================================
+           CONCEPT BOX
+        ========================================================= */
+
+        .concept-box {
+            background: linear-gradient(
+                135deg,
+                #eef2ff,
+                #f0fdfa
+            );
+            border: 1px solid #c7d2fe;
+            border-radius: 12px;
+            padding: 17px 18px;
+            margin: 15px 0;
+        }
+
+        .concept-box h4 {
+            color: #1e3a8a;
+            font-size: 1.35rem;
+            font-weight: 900;
+            margin: 0 0 10px;
+            padding: 0;
+            border: none;
+            background: none;
+        }
+
+        /* =========================================================
+           SYNTAX BOX
+        ========================================================= */
+
+        .syntax-box {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 13px 15px;
+            margin: 10px 0 15px;
+        }
+
+        .syntax-box code {
+            color: #1e3a8a;
+            font-family: Consolas, monospace;
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+
+        /* =========================================================
+           CODE BLOCK
+        ========================================================= */
+
+        .code-container {
+            margin: 15px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            background: linear-gradient(
+                135deg,
+                #0f172a,
+                #111827
+            );
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+        }
+
+        .code-title {
+            padding: 9px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #93c5fd;
+            font-size: 0.75rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .code-container pre {
+            padding: 16px;
+            color: #e2e8f0;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 0.83rem;
+            line-height: 1.6;
+        }
+
+        /* =========================================================
+           OUTPUT BOX
+        ========================================================= */
+
+        .output-box {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .output-title {
+            padding: 9px 14px;
+            color: #047857;
+            background: #ecfdf5;
+            border-bottom: 1px solid #a7f3d0;
+            font-size: 0.75rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .output-box pre {
+            padding: 15px;
+            color: #1e293b;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            font-weight: 600;
+        }
+
+        /* =========================================================
+           TABLE
+        ========================================================= */
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 550px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background: #1e3a8a;
+            color: white;
+            padding: 11px;
+            text-align: left;
+            font-size: 0.84rem;
+            font-weight: 900;
+        }
+
+        td {
+            padding: 10px 11px;
+            border: 1px solid #e2e8f0;
+            color: #334155;
+            font-size: 0.88rem;
+            font-weight: 600;
+            vertical-align: top;
+            line-height: 1.5;
+        }
+
+        tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+
+        /* =========================================================
+           SMALL PROGRAM
+        ========================================================= */
+
+        .small-program {
+            margin-top: 12px;
+        }
+
+        .small-program-title {
+            color: #312e81;
+            font-size: 1rem;
+            font-weight: 900;
+            margin: 12px 0 6px;
+        }
+
+        /* =========================================================
+           SEARCH NO RESULT
+        ========================================================= */
+
+        #noResults {
+            display: none;
+            text-align: center;
+            padding: 35px;
+            color: #64748b;
+            font-weight: 800;
+        }
+
+        /* =========================================================
+           FOOTER
+        ========================================================= */
+
+        footer {
+            text-align: center;
+            margin-top: 55px;
+            padding: 25px 10px;
+            border-top: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 0.84rem;
+            font-weight: 700;
+        }
+
+        /* =========================================================
+           RESPONSIVE
+        ========================================================= */
+
+        @media (max-width: 900px) {
+
+            .sidebar {
+                width: 230px;
+            }
+
+            .main-content {
+                margin-left: 230px;
+                padding: 25px;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 700px) {
+
+            .sidebar {
+                width: 100%;
+                height: 72px;
+                padding: 10px 14px;
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                overflow-x: auto;
+                overflow-y: hidden;
+            }
+
+            .contents-pill {
+                margin: 0;
+                flex-shrink: 0;
+            }
+
+            .sidebar-title {
+                display: none;
+            }
+
+            .toc-list {
+                display: flex;
+                gap: 6px;
+                flex-shrink: 0;
+            }
+
+            .toc-list li {
+                margin: 0;
+            }
+
+            .toc-list a {
+                white-space: nowrap;
+                padding: 8px 10px;
+                background: rgba(255, 255, 255, 0.04);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 100px 15px 25px;
+            }
+
+            .hero {
+                padding: 32px 25px;
+                border-radius: 20px;
+            }
+
+            .hero h1 {
+                font-size: 1.7rem;
+            }
+
+            .hero p {
+                font-size: 0.88rem;
+            }
+
+            .question-box {
+                flex-direction: column;
+            }
+
+            .marks {
+                align-self: flex-start;
+            }
+
+            .answer-content {
+                padding-left: 17px;
+                padding-right: 17px;
+            }
+
+            .answer-content.show {
+                padding-left: 17px;
+                padding-right: 17px;
+            }
+
+            .answer-toggle {
+                margin-left: 17px;
+            }
+
+            .section-heading h2 {
+                font-size: 1.35rem;
+            }
+        }
+        
+        
+/* =========================================================
+   QUICK REVISION TABLE
+   Matches existing question-card structure
+========================================================= */
+
+.quick-revision-section {
+    margin-top: 45px;
+    margin-bottom: 35px;
+
+    animation: fadeUp 0.7s ease both;
+}
+
+
+/* ---------------------------------------------------------
+   SECTION HEADING
+--------------------------------------------------------- */
+
+.quick-revision-section .section-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    margin-bottom: 18px;
+}
+
+.quick-revision-section .section-heading > span {
+    font-size: 1.4rem;
+
+    width: 45px;
+    height: 45px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background: linear-gradient(
+        135deg,
+        #eef2ff,
+        #e0f2fe
+    );
+
+    border: 1px solid #c7d2fe;
+}
+
+.quick-revision-section .section-heading h2 {
+    margin: 0;
+
+    color: #1e3a8a;
+
+    font-size: 1.35rem;
+
+    font-weight: 800;
+}
+
+.quick-revision-section .section-heading p {
+    margin-top: 3px;
+
+    color: #64748b;
+
+    font-size: 0.88rem;
+
+    font-weight: 600;
+}
+
+
+/* ---------------------------------------------------------
+   TABLE CARD
+--------------------------------------------------------- */
+
+.revision-table-card {
+    background: rgba(255, 255, 255, 0.95);
+
+    border: 1px solid #e2e8f0;
+
+    border-left: 4px solid #6366f1;
+
+    border-radius: 18px;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 8px 25px rgba(15, 23, 42, 0.06);
+
+    transition:
+        transform 0.3s ease,
+        box-shadow 0.3s ease;
+}
+
+.revision-table-card:hover {
+    transform: translateY(-4px);
+
+    box-shadow:
+        0 15px 35px rgba(15, 23, 42, 0.09);
+}
+
+
+/* ---------------------------------------------------------
+   TABLE
+--------------------------------------------------------- */
+
+.quick-revision-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    font-size: 0.92rem;
+}
+
+
+/* ---------------------------------------------------------
+   HEADER
+--------------------------------------------------------- */
+
+.quick-revision-table thead {
+    background: linear-gradient(
+        135deg,
+        #eef2ff,
+        #e0f2fe
+    );
+}
+
+.quick-revision-table th {
+    padding: 14px 16px;
+
+    text-align: left;
+
+    color: #f9f8fc;
+
+    font-size: 0.82rem;
+
+    font-weight: 800;
+
+    border-bottom: 1px solid #c7d2fe;
+}
+
+
+/* ---------------------------------------------------------
+   BODY
+--------------------------------------------------------- */
+
+.quick-revision-table td {
+    padding: 12px 16px;
+
+    color: #334155;
+
+    font-size: 0.9rem;
+
+    font-weight: 600;
+
+    line-height: 1.5;
+
+    border-bottom: 1px solid #e2e8f0;
+
+    transition:
+        background 0.25s ease,
+        padding-left 0.25s ease;
+}
+
+
+/* ---------------------------------------------------------
+   CONCEPT COLUMN
+--------------------------------------------------------- */
+
+.quick-revision-table td:first-child {
+    color: #1e3a8a;
+
+    font-weight: 800;
+
+    white-space: nowrap;
+}
+
+
+/* ---------------------------------------------------------
+   ROW EFFECT
+--------------------------------------------------------- */
+
+.quick-revision-table tbody tr {
+    transition: background 0.25s ease;
+}
+
+.quick-revision-table tbody tr:hover {
+    background: #f8faff;
+}
+
+.quick-revision-table tbody tr:hover td {
+    padding-left: 19px;
+}
+
+
+/* Last row */
+
+.quick-revision-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* ---------------------------------------------------------
+   CODE
+--------------------------------------------------------- */
+
+.quick-revision-table code {
+    background: #f1f5f9;
+
+    color: #3730a3;
+
+    border: 1px solid #e2e8f0;
+
+    border-radius: 6px;
+
+    padding: 4px 7px;
+
+    font-size: 0.8rem;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+
+/* ---------------------------------------------------------
+   MOBILE
+--------------------------------------------------------- */
+
+@media (max-width: 700px) {
+
+    .quick-revision-section {
+        margin-top: 35px;
+    }
+
+    .quick-revision-section .section-heading h2 {
+        font-size: 1.2rem;
+    }
+
+    .quick-revision-section .section-heading p {
+        font-size: 0.8rem;
+    }
+
+    .revision-table-card {
+        overflow-x: auto;
+    }
+
+    .quick-revision-table {
+        min-width: 650px;
+    }
+
+}
+
+
+    </style>
+</head>
+
+
+<body>
+
+    <!-- =========================================================
+         READING PROGRESS
+    ========================================================== -->
+
+    <div class="progress-bar" id="progressBar"></div>
+
+
+    <!-- =========================================================
+         SIDEBAR / TABLE OF CONTENTS
+    ========================================================== -->
+
+    <aside class="sidebar">
+
+        <div class="contents-pill">
+            📚 Contents
+        </div>
+
+        <div class="sidebar-title">
+            🟢 2 Marks
+        </div>
+
+        <ul class="toc-list">
+
+            <li>
+                <a href="#q2-1">
+                    ▪️ Series vs DataFrame
+                </a>
+            </li>
+
+            <li>
+                <a href="#q2-2">
+                    ▪️ Indexing
+                </a>
+            </li>
+
+            <li>
+                <a href="#q2-3">
+                    ▪️ Missing Data
+                </a>
+            </li>
+
+            <li>
+                <a href="#q2-4">
+                    ▪️ Data Aggregation
+                </a>
+            </li>
+
+            <li>
+                <a href="#q2-5">
+                    ▪️ Time Series
+                </a>
+            </li>
+
+        </ul>
+
+
+        <div class="sidebar-title">
+            🟠 5 Marks
+        </div>
+
+        <ul class="toc-list">
+
+            <li>
+                <a href="#q5-1">
+                    ▪️ .loc[] and .iloc[]
+                </a>
+            </li>
+
+            <li>
+                <a href="#q5-2">
+                    ▪️ Duplicates & Replace
+                </a>
+            </li>
+
+            <li>
+                <a href="#q5-3">
+                    ▪️ Combining & Merging
+                </a>
+            </li>
+
+            <li>
+                <a href="#q5-4">
+                    ▪️ Missing Data Methods
+                </a>
+            </li>
+
+            <li>
+                <a href="#q5-5">
+                    ▪️ Aggregation
+                </a>
+            </li>
+
+        </ul>
+
+
+        <div class="sidebar-title">
+            🔴 10 Marks
+        </div>
+
+        <ul class="toc-list">
+
+            <li>
+                <a href="#q10-1">
+                    ▪️ Data Selection
+                </a>
+            </li>
+
+            <li>
+                <a href="#q10-2">
+                    ▪️ Employee Data Cleaning
+                </a>
+            </li>
+
+            <li>
+                <a href="#q10-3">
+                    ▪️ Missing Time Series
+                </a>
+            </li>
+
+            <li>
+                <a href="#q10-4">
+                    ▪️ Students & Marks
+                </a>
+            </li>
+
+            <li>
+                <a href="#q10-5">
+                    ▪️ Stock Market
+                </a>
+            </li>
+
+        </ul>
+
+    </aside>
+
+
+    <!-- =========================================================
+         MAIN CONTENT
+    ========================================================== -->
+
+    <main class="main-content">
+
+
+        <!-- =====================================================
+             HERO
+        ====================================================== -->
+
+        <section class="hero">
+
+            <div class="hero-content">
+
+                <div class="hero-badge">
+                     B.Sc. Data Science & AI
+                </div>
+
+                <h1>
+                    UNIT 4: Data Manipulation with Pandas 🐼
+                </h1>
+
+                <p>
+                    Learn the concept, understand the code, observe output.
+                </p>
+
+            </div>
+
+            <span class="hero-circle circle-one"></span>
+            <span class="hero-circle circle-two"></span>
+            <span class="hero-circle circle-three"></span>
+
+        </section>
+
+
+        <!-- =====================================================
+             SEARCH
+        ====================================================== -->
+
+        <div class="search-wrapper">
+
+            <input
+                type="text"
+                id="searchInput"
+                class="search-box"
+                placeholder="Search questions..."
+            >
+
+        </div>
+
+
+        <div id="noResults">
+            No matching questions found.
+        </div>
+
+
+        <!-- =====================================================
+             2 MARK QUESTIONS
+        ====================================================== -->
+
+        <section
+            class="section-heading"
+            id="two-marks"
+        >
+
+            <h2>
+                —— 🟢 2-Mark Questions ——
+            </h2>
+
+            <p>
+                Short and clear exam-ready answers
+            </p>
+
+        </section>
+
+
+        <!-- =====================================================
+             2 MARK - QUESTION 1
+        ====================================================== -->
+
+        <article
+            class="question-card two-mark"
+            id="q2-1"
+        >
+
+            <div class="question-box">
+
+                <div class="question-text">
+                    1. Explain the difference between a Pandas Series and a DataFrame.
+                </div>
+
+                <span class="marks">
+                    2 MARKS
+                </span>
+
+            </div>
+
+
+            <button class="answer-toggle">
+                View Answer
+            </button>
+
+
+            <div class="answer-content">
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>Feature</th>
+                                <th>Pandas Series</th>
+                                <th>Pandas DataFrame</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            <tr>
+                                <td>Dimension</td>
+                                <td>One-dimensional</td>
+                                <td>Two-dimensional</td>
+                            </tr>
+
+                            <tr>
+                                <td>Data</td>
+                                <td>Single column of data</td>
+                                <td>Rows and multiple columns</td>
+                            </tr>
+
+                            <tr>
+                                <td>Example</td>
+                                <td><code>pd.Series([10,20,30])</code></td>
+                                <td><code>pd.DataFrame({"A":[10,20]})</code></td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             2 MARK - QUESTION 2
+        ====================================================== -->
+
+        <article
+            class="question-card two-mark"
+            id="q2-2"
+        >
+
+            <div class="question-box">
+
+                <div class="question-text">
+                    2. What is the role of indexing in Pandas DataFrames?
+                </div>
+
+                <span class="marks">
+                    2 MARKS
+                </span>
+
+            </div>
+
+
+            <button class="answer-toggle">
+                View Answer
+            </button>
+
+
+            <div class="answer-content">
+
+                <h4>
+                    INDEXING IN PANDAS DATAFRAME
+                </h4>
+
+                <p>
+                    Indexing assigns labels or positions to rows and helps us
+                    identify, access and select specific data efficiently.
+                </p>
+
+                <ul>
+
+                    <li>
+                        ▪️ Each row can have a unique index label.
+                    </li>
+
+                    <li>
+                        ▪️ Indexing helps retrieve particular rows quickly.
+                    </li>
+
+                    <li>
+                        ▪️ It is useful for selecting and aligning data.
+                    </li>
+
+                    <li>
+                        ▪️ Labels can be accessed using methods such as
+                        <code>.loc[]</code>.
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             2 MARK - QUESTION 3
+        ====================================================== -->
+
+        <article
+            class="question-card two-mark"
+            id="q2-3"
+        >
+
+            <div class="question-box">
+
+                <div class="question-text">
+                    3. How does Pandas handle missing data by default?
+                </div>
+
+                <span class="marks">
+                    2 MARKS
+                </span>
+
+            </div>
+
+
+            <button class="answer-toggle">
+                View Answer
+            </button>
+
+
+            <div class="answer-content">
+
+                <h4>
+                    MISSING DATA IN PANDAS
+                </h4>
+
+                <p>
+                    Pandas represents missing numeric values using
+                    <code>NaN</code> and does not automatically remove or
+                    replace them.
+                </p>
+
+                <ul>
+
+                    <li>
+                        ▪️ Missing values are commonly represented as <code>NaN</code>.
+                    </li>
+
+                    <li>
+                        ▪️ Many Pandas calculations skip missing values by default.
+                    </li>
+
+                    <li>
+                        ▪️ <code>isna()</code> and <code>isnull()</code> can identify missing values.
+                    </li>
+
+                    <li>
+                        ▪️ <code>dropna()</code> and <code>fillna()</code> can handle them.
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             2 MARK - QUESTION 4
+        ====================================================== -->
+
+        <article
+            class="question-card two-mark"
+            id="q2-4"
+        >
+
+            <div class="question-box">
+
+                <div class="question-text">
+                    4. Define data aggregation in Pandas with an example.
+                </div>
+
+                <span class="marks">
+                    2 MARKS
+                </span>
+
+            </div>
+
+
+            <button class="answer-toggle">
+                View Answer
+            </button>
+
+
+            <div class="answer-content">
+
+                <h4>
+                    DATA AGGREGATION
+                </h4>
+
+                <p>
+                    Data aggregation is the process of combining multiple
+                    values into a summary value such as sum, mean or count.
+                </p>
+
+                <ul>
+
+                    <li>
+                        ▪️ Aggregation converts detailed data into useful summaries.
+                    </li>
+
+                    <li>
+                        ▪️ Common functions include <code>sum()</code>,
+                        <code>mean()</code> and <code>count()</code>.
+                    </li>
+
+                    <li>
+                        ▪️ It is commonly used with <code>groupby()</code>.
+                    </li>
+
+                </ul>
+
+
+                <div class="code-container">
+
+                    <div class="code-title">
+                        💻 EXAMPLE PROGRAM
+                    </div>
+
+                    <pre><code>import pandas as pd
+
+df = pd.DataFrame({
+    "Dept": ["IT", "IT", "HR"],
+    "Salary": [50000, 60000, 55000]
+})
+
+print(df.groupby("Dept")["Salary"].mean())</code></pre>
+
+                </div>
+
+
+                <div class="output-box">
+
+                    <div class="output-title">
+                        📤 OUTPUT
+                    </div>
+
+                    <pre>Dept
+HR    55000.0
+IT    55000.0
+Name: Salary, dtype: float64</pre>
+
+                </div>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             2 MARK - QUESTION 5
+        ====================================================== -->
+
+        <article
+            class="question-card two-mark"
+            id="q2-5"
+        >
+
+            <div class="question-box">
+
+                <div class="question-text">
+                    5. Why is handling time series data important in Pandas?
+                </div>
+
+                <span class="marks">
+                    2 MARKS
+                </span>
+
+            </div>
+
+
+            <button class="answer-toggle">
+                View Answer
+            </button>
+
+
+            <div class="answer-content">
+
+                <h4>
+                    TIME SERIES DATA IN PANDAS
+                </h4>
+
+                <p>
+                    Time series data contains values recorded over time.
+                    Pandas provides powerful tools to organize, analyze and
+                    manipulate date-based data.
+                </p>
+
+                <ul>
+
+                    <li>
+                        ▪️ It supports date and time indexes.
+                    </li>
+
+                    <li>
+                        ▪️ Missing time-based values can be handled easily.
+                    </li>
+
+                    <li>
+                        ▪️ Resampling, rolling averages and time-based analysis are supported.
+                    </li>
+
+                    <li>
+                        ▪️ It is useful for sales, stock prices and sensor data.
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             5 MARK QUESTIONS
+        ====================================================== -->
+
+        <section
+            class="section-heading"
+            id="five-marks"
+        >
+
+            <h2>
+                —— 🟠 5-Mark Questions ——
+            </h2>
+
+            <p>
+                Concept + Example Program + Output
+            </p>
+
+        </section>
+
+
+        <!-- =====================================================
+             5 MARK - QUESTION 1
+        ====================================================== -->
+
+        <article
+            class="question-card five-mark"
+            id="q5-1"
+        >
+
+            <div class="question-box">
+
+                <div class="question-text">
+                    1. Write a Python code to create a DataFrame and demonstrate the use of .loc[] and .iloc[] for accessing data.
+                </div>
+
+                <span class="marks">
+                    5 MARKS
+                </span>
+
+            </div>
+
+
+            <button class="answer-toggle">
+                View Answer
+            </button>
+
+
+            <div class="answer-content">
+
+                <!-- LOC -->
+
+                <h4>
+                    .loc[]
+                </h4>
+
+                <p>
+                    <code>.loc[]</code> is used for label-based selection.
+                    It accesses rows and columns using their labels.
+                </p>
+
+                <ul>
+
+                    <li>
+                        ▪️ Selects data using row and column labels.
+                    </li>
+
+                    <li>
+                        ▪️ Useful when meaningful index labels are available.
+                    </li>
+
+                </ul>
+
+                <p>
+                    <strong>Syntax:</strong>
+                </p>
+
+                <div class="syntax-box">
+                    <code>df.loc[row_label, column_label]</code>
+                </div>
+
+
+                <div class="code-container">
+
+                    <div class="code-title">
+                        💻 EXAMPLE PROGRAM
+                    </div>
+
+                    <pre><code>import pandas as pd
+
+df = pd.DataFrame({
+    "Employee_Name": ["Arun", "Bala", "Charan"],
+    "Salary": [55000, 48000, 62000]
+})
+
+print(df.loc[1, "Employee_Name"])</code></pre>
+
+                </div>
+
+
+                <div class="output-box">
+
+                    <div class="output-title">
+                        📤 OUTPUT
+                    </div>
+
+                    <pre>Bala</pre>
+
+                </div>
+
+
+                <!-- ILOC -->
+
+                <h4>
+                    .iloc[]
+                </h4>
+
+                <p>
+                    <code>.iloc[]</code> is used for integer-position-based
+                    selection. It accesses rows and columns according to
+                    their numerical positions.
+                </p>
+
+                <ul>
+
+                    <li>
+                        ▪️ Uses integer positions beginning from 0.
+                    </li>
+
+                    <li>
+                        ▪️ Useful when exact row or column positions are known.
+                    </li>
+
+                </ul>
+
+                <p>
+                    <strong>Syntax:</strong>
+                </p>
+
+                <div class="syntax-box">
+                    <code>df.iloc[row_position, column_position]</code>
+                </div>
+
+
+                <div class="code-container">
+
+                    <div class="code-title">
+                        💻 EXAMPLE PROGRAM
+                    </div>
+
+                    <pre><code>import pandas as pd
+
+df = pd.DataFrame({
+    "Employee_Name": ["Arun", "Bala", "Charan"],
+    "Salary": [55000, 48000, 62000]
+})
+
+print(df.iloc[2, 0])</code></pre>
+
+                </div>
+
+
+                <div class="output-box">
+
+                    <div class="output-title">
+                        📤 OUTPUT
+                    </div>
+
+                    <pre>Charan</pre>
+
+                </div>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             5 MARK - QUESTION 2
+        ====================================================== -->
+
+        <article
+            class="question-card five-mark"
+            id="q5-2"
+        >
+
+            <div class="question-box">
+
+                <div class="question-text">
+                    2. Demonstrate with code how to remove duplicates and replace values in a Pandas DataFrame.
+                </div>
+
+                <span class="marks">
+                    5 MARKS
+                </span>
+
+            </div>
+
+
+            <button class="answer-toggle">
+                View Answer
+            </button>
+
+
+            <div class="answer-content">
+
+                <!-- DUPLICATES -->
+
+                <h4>
+                    REMOVE DUPLICATES
+                </h4>
+
+                <p>
+                    <code>drop_duplicates()</code> removes repeated rows
+                    from a DataFrame.
+                </p>
+
+                <ul>
+
+                    <li>
+                        ▪️ It helps prevent repeated records.
+                    </li>
+
+                    <li>
+                        ▪️ <code>subset</code> can be used to check selected columns.
+                    </li>
+
+                </ul>
+
+                <p>
+                    <strong>Syntax:</strong>
+                </p>
+
+                <div class="syntax-box">
+                    <code>df.drop_duplicates()</code>
+                </div>
+
+
+                <div class="code-container">
+
+                    <div class="code-title">
+                        💻 EXAMPLE PROGRAM
+                    </div>
+
+                    <pre><code>import pandas as pd
+
+df = pd.DataFrame({
+    "Product_ID": [101, 102, 102],
+    "Price": [500, 800, 800]
+})
+
+df = df.drop_duplicates()
+
+print(df)</code></pre>
+
+                </div>
+
+
+                <div class="output-box">
+
+                    <div class="output-title">
+                        📤 OUTPUT
+                    </div>
+
+                    <pre>   Product_ID  Price
+0         101    500
+1         102    800</pre>
+
+                </div>
+
+
+                <!-- REPLACE -->
+
+                <h4>
+                    REPLACE VALUES
+                </h4>
+
+                <p>
+                    <code>replace()</code> changes existing values into
+                    new values in a Series or DataFrame.
+                </p>
+
+                <ul>
+
+                    <li>
+                        ▪️ Useful for correcting inconsistent values.
+                    </li>
+
+                    <li>
+                        ▪️ It can replace one or many values.
+                    </li>
+
+                </ul>
+
+                <p>
+                    <strong>Syntax:</strong>
+                </p>
+
+                <div class="syntax-box">
+                    <code>df["Column"].replace(old_value, new_value)</code>
+                </div>
+
+
+                <div class="code-container">
+
+                    <div class="code-title">
+                        💻 EXAMPLE PROGRAM
+                    </div>
+
+                    <pre><code>df["Category"] = df["Category"].replace("Acc","Accessories")
+
+                    </code></pre>
+
+                </div>
+
+
+                <div class="output-box">
+
+                    <div class="output-title">
+                        📤 OUTPUT
+                    </div>
+
+                    <pre>Accessories</pre>
+
+                </div>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             5 MARK - QUESTION 3
+        ====================================================== -->
+
+        <article
+            class="question-card five-mark"
+            id="q5-3"
+        >
+
+            <div class="question-box">
+
+                <div class="question-text">
+                    3. Analyze the advantages of combining and merging datasets using Pandas. Provide an example.
+                </div>
+
+                <span class="marks">
+                    5 MARKS
+                </span>
+
+            </div>
+
+
+            <button class="answer-toggle">
+                View Answer
+            </button>
+
+
+            <div class="answer-content">
+
+                <h4>
+    COMBINING AND MERGING DATASETS
+</h4>
+
+<p>
+    Combining and merging are Pandas techniques used to bring data from
+    different DataFrames into a single useful dataset. They are especially
+    useful when related information is stored separately.
+</p>
+
+<ul>
+    <li>▪️ <strong>merge():</strong> Combines DataFrames using a common column or key, similar to a database join.</li>
+    <li>▪️ <strong>concat():</strong> Combines DataFrames by stacking rows or columns.</li>
+</ul>
+
+<h4>
+    ADVANTAGES:
+</h4>
+
+<div class="table-wrapper">
+
+
+<table>
+
+    <thead>
+        <tr>
+            <th>Advantage</th>
+            <th>Explanation</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        <tr>
+            <td>Data Integration</td>
+            <td>Combines related information from multiple datasets into one dataset.</td>
+        </tr>
+
+        <tr>
+            <td>Less Manual Work</td>
+            <td>Common keys can be matched automatically instead of matching records manually.</td>
+        </tr>
+
+        <tr>
+            <td>Better Analysis</td>
+            <td>More complete data allows better comparison and decision-making.</td>
+        </tr>
+
+        <tr>
+            <td>Flexible</td>
+            <td>Different types of joins and concatenation methods can be selected according to the requirement.</td>
+        </tr>
+
+    </tbody>
+
+</table>
+
+</div>
+
+<h4>
+    SYNTAX:
+</h4>
+
+<div class="syntax-box">
+    <code>pd.merge(df1, df2, on="Common_Column")</code>
+    <br><br>
+    <code>pd.concat([df1, df2], ignore_index=True)</code>
+</div>
+
+
+
+<div class="code-container">
+
+
+<div class="code-title">
+    💻 EXAMPLE PROGRAM
+</div>
+
+<pre><code>import pandas as pd
+
+# Employee details
+
+employees = pd.DataFrame({
+"Employee_ID": [101, 102, 103],
+"Name": ["Arun", "Bala", "Charan"],
+"Department": ["IT", "HR", "Finance"]
+})
+
+# Employee salary details
+
+salary = pd.DataFrame({
+"Employee_ID": [101, 102, 103],
+"Salary": [55000, 48000, 60000]
+})
+
+# Merge both datasets using Employee_ID
+
+result = pd.merge(
+employees,
+salary,
+on="Employee_ID"
+)
+
+print(result)</code></pre>
+
+</div>
+
+<div class="output-box">
+
+<div class="output-title">
+    📤 OUTPUT
+</div>
+
+<pre>   Employee_ID    Name Department  Salary
+
+0          101    Arun         IT   55000
+1          102    Bala         HR   48000
+2          103  Charan     Finance   60000</pre>
+
+</div>
+
+
+                </div>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             5 MARK - QUESTION 4
+        ====================================================== -->
+
+        <article
+            class="question-card five-mark"
+            id="q5-4"
+        >
+
+            <div class="question-box">
+
+                <div class="question-text">
+                    4. Apply different methods of handling missing data (dropna(), fillna()) in a DataFrame. Explain with code.
+                </div>
+
+                <span class="marks">
+                    5 MARKS
+                </span>
+
+            </div>
+
+
+            <button class="answer-toggle">
+                View Answer
+            </button>
+
+
+            <div class="answer-content">
+
+                <!-- DROPNA -->
+
+                <h4>
+                    dropna()
+                </h4>
+
+                <p>
+                    <code>dropna()</code> removes rows or columns containing
+                    missing values.
+                </p>
+
+                <ul>
+
+                    <li>
+                        ▪️ Useful when incomplete records are not required.
+                    </li>
+
+                    <li>
+                        ▪️ It can remove rows containing <code>NaN</code>.
+                    </li>
+
+                </ul>
+
+                <p>
+                    <strong>Syntax:</strong>
+                </p>
+
+                <div class="syntax-box">
+                    <code>df.dropna()</code>
+                </div>
+
+
+                <div class="code-container">
+
+                    <div class="code-title">
+                        💻 EXAMPLE PROGRAM
+                    </div>
+
+                    <pre><code>import pandas as pd
+
+df = pd.DataFrame({
+    "Name": ["Arun", "Bala"],
+    "Marks": [85, None]
+})
+
+print(df.dropna())</code></pre>
+
+                </div>
+
+
+                <div class="output-box">
+
+                    <div class="output-title">
+                        📤 OUTPUT
+                    </div>
+
+                    <pre>   Name  Marks
+0  Arun   85.0</pre>
+
+                </div>
+
+
+                <!-- FILLNA -->
+
+                <h4>
+                    fillna()
+                </h4>
+
+                <p>
+                    <code>fillna()</code> replaces missing values with a
+                    specified value such as zero, mean or another suitable value.
+                </p>
+
+                <ul>
+
+                    <li>
+                        ▪️ Preserves the existing rows.
+                    </li>
+
+                    <li>
+                        ▪️ Useful when missing records should not be deleted.
+                    </li>
+
+                </ul>
+
+                <p>
+                    <strong>Syntax:</strong>
+                </p>
+
+                <div class="syntax-box">
+                    <code>df["Column"].fillna(value)</code>
+                </div>
+
+
+                <div class="code-container">
+
+                    <div class="code-title">
+                        💻 EXAMPLE PROGRAM
+                    </div>
+
+                    <pre><code>df["Marks"] = df["Marks"].fillna(
+    df["Marks"].mean()
+)
+
+print(df)</code></pre>
+
+                </div>
+
+
+                <div class="output-box">
+
+                    <div class="output-title">
+                        📤 OUTPUT
+                    </div>
+
+                    <pre>   Name  Marks
+0  Arun   85.0
+1  Bala   85.0</pre>
+
+                </div>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             5 MARK - QUESTION 5
+        ====================================================== -->
+
+        <article
+            class="question-card five-mark"
+            id="q5-5"
+        >
+
+            <div class="question-box">
+
+                <div class="question-text">
+                    5. Apply aggregation functions (sum, mean, count) on a grouped DataFrame. Show how to use agg() function.
+                </div>
+
+                <span class="marks">
+                    5 MARKS
+                </span>
+
+            </div>
+
+
+            <button class="answer-toggle">
+                View Answer
+            </button>
+
+
+            <div class="answer-content">
+
+                <h4>
+    GROUPED AGGREGATION
+</h4>
+
+<p>
+    Aggregation is the process of summarizing grouped data into a single value. When combined with <code>groupby()</code>, it calculates summary statistics for each group separately. <code>groupby()</code> divides DataFrame into groups based on a column and aggregation applies function on each group.
+</p>
+
+<ul>
+    <li>
+        ▪️ <strong>Grouping -</strong> <code>groupby()</code> divides DataFrame into groups based on a column.
+    </li>
+    <li>
+        ▪️ <strong>Aggregation -</strong> Applies a function on each group to get summary.
+    </li>
+
+    <h4>
+    AGGREGATION FUNCTIONS
+</h4>
+    <li>
+        ▪️ <strong>sum() -</strong> Calculates total of all values in each group.
+    </li>
+    <li>
+        ▪️ <strong>mean() -</strong> Calculates average value of each group.
+    </li>
+    <li>
+        ▪️ <strong>count() -</strong> Counts number of non-missing values in each group.
+    </li>
+    <li>
+        ▪️ <strong>agg() -</strong> Applies multiple aggregation functions together at once efficiently.
+    </li>
+</ul>
+
+<h4>
+    SYNTAX:
+</h4>
+
+<div class="syntax-box">
+    <code>df.groupby("group_column")["value_column"].sum()</code>
+    <br><br>
+    <code>df.groupby("group_column")["value_column"].mean()</code>
+    <br><br>
+    <code>df.groupby("group_column")["value_column"].count()</code>
+    <br><br>
+    <code>df.groupby("group_column")["value_column"].agg(["sum", "mean", "count"])</code>
+</div>
+
+<div class="code-container">
+    <div class="code-title">
+        💻 EXAMPLE PROGRAM
+    </div>
+<pre><code>import pandas as pd
+
+df = pd.DataFrame({
+    "Department": ["IT", "IT", "HR", "HR"],
+    "Salary": [50000, 60000, 55000, 65000]
+})
+
+print("Sum:")
+print(df.groupby("Department")["Salary"].sum())
+
+print("\nMean:")
+print(df.groupby("Department")["Salary"].mean())
+
+print("\nCount:")
+print(df.groupby("Department")["Salary"].count())
+
+print("\nAll using agg():")
+result = df.groupby("Department")["Salary"].agg(["sum", "mean", "count"])
+print(result)</code></pre>
+</div>
+
+<div class="output-box">
+    <div class="output-title">
+        📤 OUTPUT
+    </div>
+<pre>Sum:
+Department
+HR    120000
+IT    110000
+
+Mean:
+Department
+HR    60000.0
+IT    55000.0
+
+Count:
+Department
+HR    2
+IT    2
+
+All using agg():
+               sum     mean  count
+Department                        
+HR          120000  60000.0      2
+IT          110000  55000.0      2</pre>
+</div>
+                </div>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             10 MARK QUESTIONS
+        ====================================================== -->
+
+        <section
+            class="section-heading"
+            id="ten-marks"
+        >
+
+            <h2>
+                —— 🔴 10-Mark Questions ——
+            </h2>
+
+            <p>
+                Program → Output → Concept Explanation
+            </p>
+
+        </section>
+
+
+        <!-- =====================================================
+             10 MARK - QUESTION 1
+        ====================================================== -->
+
+        <article
+            class="question-card ten-mark"
+            id="q10-1"
+        >
+
+            <div class="question-box">
+
+                <div class="question-text">
+                    1. Compare and analyze different ways of data selection in Pandas (e.g., .loc[], .iloc[], boolean indexing, slicing) with examples.
+                </div>
+
+                <span class="marks">
+                    10 MARKS
+                </span>
+
+            </div>
+
+
+            <button class="answer-toggle">
+                View Answer
+            </button>
+
+
+            <div class="answer-content">
+
+                <h4>
+                    💻 CODE
+                </h4>
+
+                <div class="code-container">
+
+                    <div class="code-title">
+                        🐼 PANDAS PROGRAM
+                    </div>
+
+                    <pre><code>import pandas as pd
+
+# Step 1: Create the DataFrame
+df = pd.DataFrame({
+    "Name": ["Arun", "Bala", "Charan", "Divya", "Esha"],
+    "Mark": [85, 72, 95, 88, 76],
+    "Dept": ["DS", "CS", "DS", "CS", "DS"]
+})
+
+# Step 2: Label-based selection using loc[]
+print("1. loc[]:")
+print(df.loc[1:3, ["Name", "Mark"]])
+
+# Step 3: Position-based selection using iloc[]
+print("\n2. iloc[]:")
+print(df.iloc[1:4, 0:2])
+
+# Step 4: Boolean indexing
+print("\n3. Boolean Indexing:")
+print(df[df["Mark"] >= 80])
+
+# Step 5: Row slicing
+print("\n4. Slicing:")
+print(df[1:4])</code></pre>
+
+                </div>
+
+
+                <h4>
+                    📤 OUTPUT
+                </h4>
+
+                <div class="output-box">
+
+                    <div class="output-title">
+                        OUTPUT
+                    </div>
+
+                    <pre>1. loc[]:
+     Name  Mark
+1    Bala    72
+2  Charan    95
+3   Divya    88
+
+2. iloc[]:
+     Name  Mark
+1    Bala    72
+2  Charan    95
+3   Divya    88
+
+3. Boolean Indexing:
+     Name  Mark Dept
+0    Arun    85   DS
+2  Charan    95   DS
+3   Divya    88   CS
+
+4. Slicing:
+     Name  Mark Dept
+1    Bala    72   CS
+2  Charan    95   DS
+3   Divya    88   CS</pre>
+
+                </div>
+
+
+                <div class="concept-box">
+
+                    <h4>
+                        📚 Concept Explanation
+                    </h4>
+
+                    <ul>
+
+                        <li>
+                            ▪️ <strong>.loc[]:</strong> Selects data using row and column labels.
+                        </li>
+
+                        <li>
+                            ▪️ <strong>.iloc[]:</strong> Selects data using integer positions.
+                        </li>
+
+                        <li>
+                            ▪️ <strong>Boolean indexing:</strong> Selects rows satisfying a condition.
+                        </li>
+
+                        <li>
+                            ▪️ <strong>Slicing:</strong> Selects a continuous range of rows or columns.
+                        </li>
+
+                    </ul>
+
+                    <p>
+                        In the program, <code>loc[]</code> selects rows using
+                        their labels, while <code>iloc[]</code> selects rows
+                        according to numerical positions. Boolean indexing
+                        filters students whose marks are 80 or above.
+                        Slicing selects rows from position 1 to 3.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             10 MARK - QUESTION 2
+        ====================================================== -->
+
+        <article
+            class="question-card ten-mark"
+            id="q10-2"
+        >
+
+            <div class="question-box">
+
+                <div class="question-text">
+                    2. A company stores employee data (ID, Name, Department, Salary). Write a program to: Remove duplicate rows, Replace missing salary with department's average, Aggregate salaries by department, Discuss how transformations help in data cleaning.
+                </div>
+
+                <span class="marks">
+                    10 MARKS
+                </span>
+
+            </div>
+
+
+            <button class="answer-toggle">
+                View Answer
+            </button>
+
+
+            <div class="answer-content">
+
+                <h4>
+                    💻 CODE
+                </h4>
+
+                <div class="code-container">
+
+                    <div class="code-title">
+                        🐼 EMPLOYEE DATA CLEANING PROGRAM
+                    </div>
+
+                    <pre><code>import pandas as pd
+
+# Step 1: Create employee data
+df = pd.DataFrame({
+    "ID": [101, 102, 102, 103, 104],
+    "Name": ["Arun", "Bala", "Bala", "Divya", "Esha"],
+    "Department": ["IT", "HR", "HR", "IT", "HR"],
+    "Salary": [50000, None, None, 60000, 55000]
+})
+
+# Step 2: Remove duplicate rows
+df = df.drop_duplicates()
+
+# Step 3: Calculate department-wise salary average
+dept_avg = df.groupby(
+    "Department"
+)["Salary"].transform("mean")
+
+# Step 4: Fill missing salary using department average
+df["Salary"] = df["Salary"].fillna(dept_avg)
+
+# Step 5: Aggregate salary by department
+summary = df.groupby(
+    "Department"
+)["Salary"].agg(["count", "sum", "mean"])
+
+# Step 6: Display cleaned data
+print(df)
+
+# Step 7: Display department summary
+print("\nDepartment-wise Salary Summary:")
+print(summary)</code></pre>
+
+                </div>
+
+
+                <h4>
+                    📤 OUTPUT
+                </h4>
+
+                <div class="output-box">
+
+                    <div class="output-title">
+                        OUTPUT
+                    </div>
+
+                    <pre>    ID   Name Department   Salary
+0  101   Arun         IT  50000.0
+1  102   Bala         HR  55000.0
+3  103  Divya         IT  60000.0
+4  104   Esha         HR  55000.0
+
+Department-wise Salary Summary:
+            count       sum     mean
+Department
+HR              2  110000.0  55000.0
+IT              2  110000.0  55000.0</pre>
+
+                </div>
+
+
+                <div class="concept-box">
+
+                    <h4>
+                        📚 Concept Explanation
+                    </h4>
+
+                    <ul>
+
+                        <li>
+                            ▪️ <strong>drop_duplicates():</strong> removes repeated employee records.
+                        </li>
+
+                        <li>
+                            ▪️ <strong>groupby():</strong> divides employees according to department.
+                        </li>
+
+                        <li>
+                            ▪️ <strong>transform("mean"):</strong> calculates the average salary for each employee's department.
+                        </li>
+
+                        <li>
+                            ▪️ <strong>fillna():</strong> replaces missing salary values with the appropriate department average.
+                        </li>
+
+                        <li>
+                            ▪️ <strong>agg():</strong> generates count, total and average salary.
+                        </li>
+
+                    </ul>
+
+                    <p>
+                        Data transformations improve data quality by removing
+                        duplicate records, filling missing information with
+                        meaningful values and producing summarized data.
+                        This makes the employee dataset cleaner and easier
+                        to analyze.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             10 MARK - QUESTION 3
+        ====================================================== -->
+
+        <article
+            class="question-card ten-mark"
+            id="q10-3"
+        >
+
+            <div class="question-box">
+
+                <div class="question-text">
+                    3. Evaluate different strategies of handling missing time series data (forward fill, backward fill, interpolation). Provide examples.
+                </div>
+
+                <span class="marks">
+                    10 MARKS
+                </span>
+
+            </div>
+
+
+            <button class="answer-toggle">
+                View Answer
+            </button>
+
+
+            <div class="answer-content">
+
+                <h4>
+                    💻 CODE
+                </h4>
+
+                <div class="code-container">
+
+                    <div class="code-title">
+                        🐼 TIME SERIES PROGRAM
+                    </div>
+
+                    <pre><code>import pandas as pd
+
+# Step 1: Create dates
+dates = pd.date_range(
+    "2026-01-01",
+    periods=5
+)
+
+# Step 2: Create time series with missing values
+sales = pd.Series(
+    [100, None, 140, None, 180],
+    index=dates
+)
+
+# Step 3: Display original data
+print("Original:")
+print(sales)
+
+# Step 4: Forward fill
+print("\nForward Fill:")
+print(sales.ffill())
+
+# Step 5: Backward fill
+print("\nBackward Fill:")
+print(sales.bfill())
+
+# Step 6: Interpolation
+print("\nInterpolation:")
+print(sales.interpolate())
+
+</code></pre>
+
+                </div>
+
+
+                <h4>
+                    📤 OUTPUT
+                </h4>
+
+                <div class="output-box">
+
+                    <div class="output-title">
+                        OUTPUT
+                    </div>
+
+                    <pre>Original:
+2026-01-01    100.0
+2026-01-02      NaN
+2026-01-03    140.0
+2026-01-04      NaN
+2026-01-05    180.0
+Freq: D, dtype: float64
+
+Forward Fill:
+2026-01-01    100.0
+2026-01-02    100.0
+2026-01-03    140.0
+2026-01-04    140.0
+2026-01-05    180.0
+Freq: D, dtype: float64
+
+Backward Fill:
+2026-01-01    100.0
+2026-01-02    140.0
+2026-01-03    140.0
+2026-01-04    180.0
+2026-01-05    180.0
+Freq: D, dtype: float64
+
+Interpolation:
+2026-01-01    100.0
+2026-01-02    120.0
+2026-01-03    140.0
+2026-01-04    160.0
+2026-01-05    180.0
+Freq: D, dtype: float64</pre>
+
+                </div>
+
+
+                <div class="concept-box">
+
+                    <h4>
+                        📚 Concept Explanation
+                    </h4>
+
+                    <ul>
+
+                        <li>
+                            ▪️ <strong>Forward fill (ffill):</strong> replaces a missing value with the previous available value.
+                        </li>
+
+                        <li>
+                            ▪️ <strong>Backward fill (bfill):</strong> replaces a missing value with the next available value.
+                        </li>
+
+                        <li>
+                            ▪️ <strong>Interpolation:</strong> estimates a missing value between known values.
+                        </li>
+
+                    </ul>
+
+                    <p>
+                        Forward fill is suitable when the previous observation
+                        should continue until a new value appears. Backward
+                        fill is useful when the next observation is a better
+                        representation. Interpolation is useful when values
+                        are expected to change gradually over time.
+                    </p>
+
+                    <p>
+                        In the program, the original series contains two
+                        missing values. All three techniques are applied and
+                        compared. Interpolation produces 120 and 160 because
+                        the values change evenly between the known observations.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             10 MARK - QUESTION 4
+        ====================================================== -->
+
+        <article
+            class="question-card ten-mark"
+            id="q10-4"
+        >
+
+            <div class="question-box">
+
+                <div class="question-text">
+                    4. Consider two datasets: Students (Name, Roll No, Class) and Marks (Roll No, Subject, Marks). Write a Pandas program to merge them and generate a subject-wise average marks report. Evaluate the usefulness of merging.
+                </div>
+
+                <span class="marks">
+                    10 MARKS
+                </span>
+
+            </div>
+
+
+            <button class="answer-toggle">
+                View Answer
+            </button>
+
+
+            <div class="answer-content">
+
+                <h4>
+                    💻 CODE
+                </h4>
+
+                <div class="code-container">
+
+                    <div class="code-title">
+                        🐼 STUDENTS AND MARKS MERGING PROGRAM
+                    </div>
+
+                    <pre><code>import pandas as pd
+
+# Step 1: Create Students dataset
+students = pd.DataFrame({
+    "Name": ["Arun", "Bala", "Charan", "Divya"],
+    "Roll No": [101, 102, 103, 104],
+    "Class": [
+        "B.Sc DS",
+        "B.Sc DS",
+        "B.Sc DS",
+        "B.Sc DS"
+    ]
+})
+
+# Step 2: Create Marks dataset
+marks = pd.DataFrame({
+    "Roll No": [
+        101, 102, 103, 104,
+        101, 102, 103, 104
+    ],
+    "Subject": [
+        "Python", "Python",
+        "Python", "Python",
+        "Statistics", "Statistics",
+        "Statistics", "Statistics"
+    ],
+    "Marks": [
+        85, 92, 78, 88,
+        90, 86, 80, 84
+    ]
+})
+
+# Step 3: Merge both datasets
+result = pd.merge(
+    students,
+    marks,
+    on="Roll No",
+    how="inner",
+    sort=False
+)
+
+# Step 4: Generate subject-wise average
+subject_avg = result.groupby(
+    "Subject"
+)["Marks"].mean()
+
+# Step 5: Display merged data
+print("Merged Student Records:")
+print(result)
+
+# Step 6: Display average marks
+print("\nSubject-wise Average Marks:")
+print(subject_avg)</code></pre>
+
+                </div>
+
+
+                <h4>
+                    📤 OUTPUT
+                </h4>
+
+                <div class="output-box">
+
+                    <div class="output-title">
+                        OUTPUT
+                    </div>
+
+                    <pre>Merged Student Records:
+     Name  Roll No    Class     Subject  Marks
+0    Arun      101  B.Sc DS      Python     85
+1    Arun      101  B.Sc DS  Statistics     90
+2    Bala      102  B.Sc DS      Python     92
+3    Bala      102  B.Sc DS  Statistics     86
+4  Charan      103  B.Sc DS      Python     78
+5  Charan      103  B.Sc DS  Statistics     80
+6   Divya      104  B.Sc DS      Python     88
+7   Divya      104  B.Sc DS  Statistics     84
+
+Subject-wise Average Marks:
+Subject
+Python        85.75
+Statistics    85.00
+Name: Marks, dtype: float64</pre>
+
+                </div>
+
+
+                <div class="concept-box">
+
+                    <h4>
+                        📚 Concept Explanation
+                    </h4>
+
+                    <ul>
+
+                        <li>
+                            ▪️ <strong>merge():</strong> combines two DataFrames using a common column.
+                        </li>
+
+                        <li>
+                            ▪️ Here, <strong>Roll No</strong> is the common key.
+                        </li>
+
+                        <li>
+                            ▪️ <strong>inner join</strong> keeps records that have matching roll numbers.
+                        </li>
+
+                        <li>
+                            ▪️ <strong>groupby()</strong> groups the merged data according to subject.
+                        </li>
+
+                        <li>
+                            ▪️ <strong>mean()</strong> calculates the average marks for each subject.
+                        </li>
+
+                    </ul>
+
+                    <p>
+                        Merging is useful because student details and marks
+                        are stored separately. The common Roll No connects
+                        the two datasets and produces one complete dataset.
+                        This avoids manually matching student names and marks
+                        and makes subject-wise analysis easier.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             10 MARK - QUESTION 5
+        ====================================================== -->
+
+        <article
+            class="question-card ten-mark"
+            id="q10-5"
+        >
+
+            <div class="question-box">
+
+                <div class="question-text">
+                    5. Design a small Pandas application that processes stock market time series data: Handle missing, Compute moving averages, Aggregate monthly performance, Generate summary report, Justify how Pandas simplifies time series analysis.
+                </div>
+
+                <span class="marks">
+                    10 MARKS
+                </span>
+
+            </div>
+
+
+            <button class="answer-toggle">
+                View Answer
+            </button>
+
+
+            <div class="answer-content">
+
+                <h4>
+                    💻 CODE
+                </h4>
+
+                <div class="code-container">
+
+                    <div class="code-title">
+                        🐼 STOCK MARKET TIME SERIES PROGRAM
+                    </div>
+
+                    <pre><code>import pandas as pd
+
+# Step 1: Create stock market dates
+dates = pd.to_datetime([
+    "2026-01-28",
+    "2026-01-29",
+    "2026-01-30",
+    "2026-01-31",
+    "2026-02-01",
+    "2026-02-02",
+    "2026-02-03",
+    "2026-02-04",
+    "2026-02-05",
+    "2026-02-06"
+])
+
+# Step 2: Create stock prices
+df = pd.DataFrame({
+    "Price": [
+        100, 102, None, 106, 108,
+        None, 112, 110, 114, 116
+    ]
+}, index=dates)
+
+# Step 3: Handle missing values
+df["Price"] = df["Price"].interpolate()
+
+# Step 4: Calculate 3-day moving average
+df["Moving_Average"] = (
+    df["Price"].rolling(3).mean()
+)
+
+# Step 5: Aggregate monthly performance
+monthly = df["Price"].groupby(
+    df.index.to_period("M")
+).agg(["first", "last", "mean"])
+
+# Step 6: Calculate monthly return
+monthly["Return_%"] = (
+    (monthly["last"] - monthly["first"])
+    / monthly["first"] * 100
+).round(2)
+
+# Step 7: Rename columns
+monthly.columns = [
+    "Start_Price",
+    "End_Price",
+    "Average_Price",
+    "Return_%"
+]
+
+# Step 8: Generate summary report
+print("Cleaned Stock Data:")
+print(
+    df.to_string(
+        float_format=lambda x: f"{x:.2f}"
+    )
+)
+
+print("\nMonthly Performance:")
+print(monthly.round(2))
+
+print("\nSummary Report:")
+print(
+    f"Average Price: {df['Price'].mean():.2f}"
+)
+print(
+    f"Highest Price: {df['Price'].max():.2f}"
+)
+print(
+    f"Lowest Price: {df['Price'].min():.2f}"
+)</code></pre>
+
+                </div>
+
+
+                <h4>
+                    📤 OUTPUT
+                </h4>
+
+                <div class="output-box">
+
+                    <div class="output-title">
+                        OUTPUT
+                    </div>
+
+                    <pre>Cleaned Stock Data:
+            Price  Moving_Average
+2026-01-28 100.00             NaN
+2026-01-29 102.00             NaN
+2026-01-30 104.00          102.00
+2026-01-31 106.00          104.00
+2026-02-01 108.00          106.00
+2026-02-02 110.00          108.00
+2026-02-03 112.00          110.00
+2026-02-04 110.00          110.67
+2026-02-05 114.00          112.00
+2026-02-06 116.00          113.33
+
+Monthly Performance:
+         Start_Price  End_Price  Average_Price  Return_%
+2026-01       100.0      106.0         103.00      6.00
+2026-02       108.0      116.0         111.67      7.41
+
+Summary Report:
+Average Price: 108.20
+Highest Price: 116.00
+Lowest Price: 100.00</pre>
+
+                </div>
+
+
+                <div class="concept-box">
+
+                    <h4>
+                        📚 Concept Explanation
+                    </h4>
+
+                    <ul>
+
+                        <li>
+                            ▪️ <strong>Time Series:</strong> Stock prices are indexed using dates.
+                        </li>
+
+                        <li>
+                            ▪️ <strong>Interpolation:</strong> Estimates the missing stock prices between known values.
+                        </li>
+
+                        <li>
+                            ▪️ <strong>Moving Average:</strong> Calculates the average of recent observations to identify trends.
+                        </li>
+
+                        <li>
+                            ▪️ <strong>groupby() with Period:</strong> Groups stock prices month-wise.
+                        </li>
+
+                        <li>
+                            ▪️ <strong>agg():</strong> Calculates monthly starting price, ending price and average price.
+                        </li>
+
+                        <li>
+                            ▪️ <strong>Return:</strong> Measures the percentage change from the beginning to the end of a month.
+                        </li>
+
+                    </ul>
+
+                    <p>
+                        Pandas simplifies stock market analysis because it
+                        provides date indexes, missing-value handling,
+                        rolling calculations and grouped aggregation in a
+                        compact form. Instead of manually processing every
+                        date, Pandas performs these operations directly on
+                        the time series.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </article>
+
+
+        
+       
+
+<!-- =========================================================
+     QUICK REVISION TABLE
+========================================================= -->
+
+<section class="quick-revision-section">
+
+    <div class="section-heading">
+        <span>📚</span>
+        <div>
+            <h2>Quick Revision Table</h2>
+            <p>Important Pandas concepts for last-minute revision</p>
+        </div>
+    </div>
+
+    <div class="revision-table-card">
+
+        <table class="quick-revision-table">
+
+            <thead>
+                <tr>
+                    <th>Concept</th>
+                    <th>Meaning</th>
+                    <th>Function</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                <tr>
+                    <td>Series</td>
+                    <td>One-dimensional labeled data</td>
+                    <td><code>pd.Series()</code></td>
+                </tr>
+
+                <tr>
+                    <td>DataFrame</td>
+                    <td>Two-dimensional tabular data</td>
+                    <td><code>pd.DataFrame()</code></td>
+                </tr>
+
+                <tr>
+                    <td>Indexing</td>
+                    <td>Access rows and columns</td>
+                    <td><code>loc[]</code> / <code>iloc[]</code></td>
+                </tr>
+
+                <tr>
+                    <td>Missing Data</td>
+                    <td>Remove or replace missing values</td>
+                    <td><code>dropna()</code> / <code>fillna()</code></td>
+                </tr>
+
+                <tr>
+                    <td>Duplicates</td>
+                    <td>Remove repeated rows</td>
+                    <td><code>drop_duplicates()</code></td>
+                </tr>
+
+                <tr>
+                    <td>Replace</td>
+                    <td>Change existing values</td>
+                    <td><code>replace()</code></td>
+                </tr>
+
+                <tr>
+                    <td>Combining</td>
+                    <td>Combine DataFrames by rows or columns</td>
+                    <td><code>concat()</code></td>
+                </tr>
+
+                <tr>
+                    <td>Merging</td>
+                    <td>Combine DataFrames using a common key</td>
+                    <td><code>pd.merge()</code></td>
+                </tr>
+
+                <tr>
+                    <td>Grouping</td>
+                    <td>Group similar records</td>
+                    <td><code>groupby()</code></td>
+                </tr>
+
+                <tr>
+                    <td>Aggregation</td>
+                    <td>Calculate summary values</td>
+                    <td><code>sum()</code> / <code>mean()</code> / <code>count()</code></td>
+                </tr>
+
+                <tr>
+                    <td>Boolean Indexing</td>
+                    <td>Select rows using conditions</td>
+                    <td><code>df[df["Mark"] &gt; 80]</code></td>
+                </tr>
+
+                <tr>
+                    <td>Slicing</td>
+                    <td>Select a range of rows</td>
+                    <td><code>df[1:4]</code></td>
+                </tr>
+
+                <tr>
+                    <td>Forward Fill</td>
+                    <td>Use previous value for missing data</td>
+                    <td><code>ffill()</code></td>
+                </tr>
+
+                <tr>
+                    <td>Backward Fill</td>
+                    <td>Use next value for missing data</td>
+                    <td><code>bfill()</code></td>
+                </tr>
+
+                <tr>
+                    <td>Interpolation</td>
+                    <td>Estimate missing values</td>
+                    <td><code>interpolate()</code></td>
+                </tr>
+
+                <tr>
+                    <td>Moving Average</td>
+                    <td>Calculate average over a rolling window</td>
+                    <td><code>rolling().mean()</code></td>
+                </tr>
+
+                <tr>
+                    <td>Time Series</td>
+                    <td>Work with date and time based data</td>
+                    <td><code>pd.to_datetime()</code></td>
+                </tr>
+
+                <tr>
+                    <td>Multiple Aggregation</td>
+                    <td>Apply several functions together</td>
+                    <td><code>agg(["sum","mean","count"])</code></td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+    <!-- =====================================================
+             FOOTER
+        ====================================================== -->
+
+        <footer>
+            By Madhumathi | B.Sc. Data Science and AI Student
+        </footer>
+
+    </main>
+
+
+    <!-- =========================================================
+         JAVASCRIPT
+    ========================================================== -->
+
+    <script>
+
+        /* =========================================================
+           VIEW / HIDE ANSWER
+        ========================================================== */
+
+        const answerButtons =
+            document.querySelectorAll(".answer-toggle");
+
+        answerButtons.forEach(button => {
+
+            button.addEventListener("click", () => {
+
+                const answer =
+                    button.nextElementSibling;
+
+                answer.classList.toggle("show");
+
+                if (answer.classList.contains("show")) {
+                    button.textContent = "Hide Answer";
+                } else {
+                    button.textContent = "View Answer";
+                }
+
+            });
+
+        });
+
+
+        /* =========================================================
+           SEARCH QUESTIONS
+        ========================================================== */
+
+        const searchInput =
+            document.getElementById("searchInput");
+
+        const questionCards =
+            document.querySelectorAll(".question-card");
+
+        const noResults =
+            document.getElementById("noResults");
+
+        searchInput.addEventListener("input", () => {
+
+            const searchValue =
+                searchInput.value.toLowerCase().trim();
+
+            let visibleCount = 0;
+
+            questionCards.forEach(card => {
+
+                const question =
+                    card
+                        .querySelector(".question-text")
+                        .textContent
+                        .toLowerCase();
+
+                if (
+                    question.includes(searchValue)
+                    || searchValue === ""
+                ) {
+
+                    card.style.display = "";
+
+                    visibleCount++;
+
+                } else {
+
+                    card.style.display = "none";
+
+                }
+
+            });
+
+            if (visibleCount === 0) {
+                noResults.style.display = "block";
+            } else {
+                noResults.style.display = "none";
+            }
+
+        });
+
+
+        /* =========================================================
+           READING PROGRESS BAR
+        ========================================================== */
+
+        const progressBar =
+            document.getElementById("progressBar");
+
+        window.addEventListener("scroll", () => {
+
+            const scrollTop =
+                window.scrollY;
+
+            const documentHeight =
+                document.documentElement.scrollHeight
+                - window.innerHeight;
+
+            const progress =
+                (scrollTop / documentHeight) * 100;
+
+            progressBar.style.width =
+                progress + "%";
+
+        });
+
+
+        /* =========================================================
+           SCROLL REVEAL
+        ========================================================== */
+
+        const observer =
+            new IntersectionObserver(
+                entries => {
+
+                    entries.forEach(entry => {
+
+                        if (entry.isIntersecting) {
+
+                            entry.target.classList.add(
+                                "visible"
+                            );
+
+                            observer.unobserve(
+                                entry.target
+                            );
+
+                        }
+
+                    });
+
+                },
+                {
+                    threshold: 0.08
+                }
+            );
+
+
+        questionCards.forEach(card => {
+            observer.observe(card);
+        });
+
+
+        /* =========================================================
+           ACTIVE SIDEBAR LINK
+        ========================================================== */
+
+        const sidebarLinks =
+            document.querySelectorAll(".toc-list a");
+
+
+        const sections =
+            document.querySelectorAll(
+                ".question-card"
+            );
+
+
+        const activeObserver =
+            new IntersectionObserver(
+                entries => {
+
+                    entries.forEach(entry => {
+
+                        if (entry.isIntersecting) {
+
+                            sidebarLinks.forEach(link => {
+                                link.classList.remove("active");
+                            });
+
+                            const activeLink =
+                                document.querySelector(
+                                    `.toc-list a[href="#${entry.target.id}"]`
+                                );
+
+                            if (activeLink) {
+                                activeLink.classList.add("active");
+                            }
+
+                        }
+
+                    });
+
+                },
+                {
+                    rootMargin: "-25% 0px -60% 0px"
+                }
+            );
+
+
+        sections.forEach(section => {
+            activeObserver.observe(section);
+        });
+
+
+        /* =========================================================
+           SIDEBAR CLICK
+        ========================================================== */
+
+        sidebarLinks.forEach(link => {
+
+            link.addEventListener("click", () => {
+
+                sidebarLinks.forEach(item => {
+                    item.classList.remove("active");
+                });
+
+                link.classList.add("active");
+
+            });
+
+        });
+
+    </script>
+
+</body>
+
+</html>
+
+
