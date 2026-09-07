@@ -35,7 +35,7 @@
 |:---:|:---|
 | 🟢 **2 Marks** | Short-answer concepts |
 | 🟠 **5 Marks** | Theory + Programs + Outputs |
-| 🔴 **10 Marks** | Detailed answers + Applications |
+| 🔴 **10 Marks** | Program + Output + Concept Explanation |
 | ⚡ **Bonus** | 18 Important Pandas Concepts |
 
 ---
