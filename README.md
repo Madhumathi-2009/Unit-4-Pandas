@@ -84,7 +84,6 @@ Created By **Madhumathi** 💜
 
 ### ⭐ If this Question Bank helps you, don't forget to Star the repository!
 
-<br><br>
 
 <a href="https://readme-typing-svg.demolab.com">
 <img src="https://readme-typing-svg.demolab.com?font=Cinzel+Decorative&weight=700&size=25&pause=1200&color=4B2E83&center=true&vCenter=true&width=650&lines=thankyou+for+visiting+%F0%9F%90%BC" alt="Closing Typing SVG"/>
